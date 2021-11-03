@@ -10,4 +10,6 @@ markdown-editor-*.zip
 dist/src/
 dist/pkg/
 *.pkg.tar.xz
+.cache
+dist
 
