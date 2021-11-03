@@ -65,24 +65,22 @@ module.exports = (state, emitter) => {
   })
 
   emitter.on('updateHash', () => {
-    window.location.hash = btoa( // base64 so url-safe
-      zlib.deflateSync(
-        unescape(encodeURIComponent( // convert to utf8
-          state.editor.getValue()
-        ))
-      )
-    )
+    window.location.hash = zlib.deflateSync(
+      unescape(encodeURIComponent( // convert to utf8
+        state.editor.getValue()
+      ))
+    ).toString('base64')
   })
 
   // Print the document named as the document title encoded to avoid strange chars and spaces
   emitter.on('saveAsMarkdown', () => {
-    save(state.editor.getValue(), document.title.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/\s]/gi, '') + '.md')
+    save(state.editor.getValue(), document.title.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/\s]/gi, '') + '.md')
     emitter.emit('menu.hide')
   })
 
   // Print the document named as the document title encoded to avoid strange chars and spaces
   emitter.on('saveAsHtml', () => {
-    save(document.getElementById('out').innerHTML, document.title.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/\s]/gi, '') + '.html')
+    save(document.getElementById('out').innerHTML, document.title.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/\s]/gi, '') + '.html')
     emitter.emit('menu.hide')
   })
 
@@ -124,8 +122,7 @@ module.exports = (state, emitter) => {
         }
         return ''
       }
-    })
-      .use(footNote)
+    }).use(footNote)
 
     function update (e) {
       setOutput(e.getValue())
@@ -141,7 +138,7 @@ module.exports = (state, emitter) => {
 
       // To avoid to much title changing we check if is not the same as before
       let oldTitle = document.title
-      if (oldTitle != title) {
+      if (oldTitle !== title) {
         oldTitle = title
         document.title = title
       }
@@ -244,21 +241,17 @@ User: @austinmm
       }
     })
 
-    document.addEventListener('drop', function (e) {
+    document.addEventListener('drop', e => {
       e.preventDefault()
       e.stopPropagation()
-
       const reader = new FileReader()
-      reader.onload = function (e) {
-        editor.setValue(e.target.result)
-      }
-
+      reader.onload = e => editor.setValue(e.target.result)
       reader.readAsText(e.dataTransfer.files[0])
     }, false)
 
     document.addEventListener('keydown', function (e) {
-      if (e.keyCode == 83 && (e.ctrlKey || e.metaKey)) {
-        if (localStorage.getItem('content') == editor.getValue()) {
+      if (e.keyCode === 83 && (e.ctrlKey || e.metaKey)) {
+        if (localStorage.getItem('content') === editor.getValue()) {
           e.preventDefault()
           return false
         }
@@ -301,59 +294,41 @@ User: @austinmm
 
     function processQueryParams () {
       const params = window.location.search.split('?')[1]
-      if (window.location.hash) {
-        document.getElementById('readbutton').click() // Show reading view
-      }
+      window.location.hash && $('readbutton').click() // Show reading view
       if (params) {
         const obj = {}
-        params.split('&').forEach(function (elem) {
-          obj[elem.split('=')[0]] = elem.split('=')[1]
-        })
-        if (obj.reading === 'false') {
-          document.getElementById('readbutton').click() // Hide reading view
-        }
-        if (obj.dark === 'true') {
-          document.getElementById('nightbutton').click() // Show night view
-        }
+        params.split('&').forEach(e => (obj[e.split('=')[0]] = e.split('=')[1]))
+        obj.reading === 'false' && $('readbutton').click() // Hide reading view
+        obj.dark === 'true' && $('nightbutton').click() // Show night view
       }
-    }
-
-    function start () {
-      processQueryParams()
-      if (window.location.hash) {
-        const h = window.location.hash.replace(/^#/, '')
-        if (h.slice(0, 5) == 'view:') {
-          setOutput(decodeURIComponent(escape(zlib.inflateSync(atob(h.slice(5))))))
-          document.body.className = 'view'
-        } else {
-          editor.setValue(
-            decodeURIComponent(escape(
-              zlib.inflateSync(
-                atob(
-                  h
-                )
-              )
-            ))
-          )
-        }
-      } else if (localStorage.getItem('content')) {
-        editor.setValue(localStorage.getItem('content'))
-      }
-      update(editor)
-      editor.focus()
     }
 
     window.addEventListener('beforeunload', function (e) {
-      if (!editor.getValue() || editor.getValue() == localStorage.getItem('content')) {
-        return
-      }
+      if (!editor.getValue() || editor.getValue() === localStorage.getItem('content')) return
       const confirmationMessage = 'It looks like you have been editing something. ' +
                             'If you leave before saving, your changes will be lost.';
       (e || window.event).returnValue = confirmationMessage // Gecko + IE
       return confirmationMessage // Gecko + Webkit, Safari, Chrome etc.
     })
 
-    start()
+    processQueryParams()
+    if (window.location.hash) {
+      const h = window.location.hash.replace(/^#/, '')
+      if (h.slice(0, 5) === 'view:') {
+        setOutput(decodeURIComponent(escape(zlib.inflateSync(Buffer.from(h.slice(5), 'base64')))))
+        document.body.className = 'view'
+      } else {
+        editor.setValue(
+          decodeURIComponent(escape(
+            zlib.inflateSync(Buffer.from(h, 'base64'))
+          ))
+        )
+      }
+    } else if (localStorage.getItem('content')) {
+      editor.setValue(localStorage.getItem('content'))
+    }
+    update(editor)
+    editor.focus()
     state.editor = editor
   })
 }
