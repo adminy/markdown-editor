@@ -30,7 +30,7 @@ module.exports = (state, emit) => (
         <p id='openbutton' title='Open from Disk' class='navbutton left' onclick="document.getElementById('fileInput').click();"><i class='material-icons'>open_in_browser</i></p>
         <input id='fileInput' onchange={e => emit('editor.file.open', e)} type='file' class='hidden' accept='.md,.mdown,.txt,.markdown' />
         <p id='savebutton' title='Download' class='navbutton left' onclick={_ => emit('menu.show')}><i class='material-icons'>file_download</i></p>
-        <p id='browsersavebutton' title='Browser Save (Experimental)' class='navbutton left' onclick='saveInBrowser()'><i class='material-icons'>save</i></p>
+        <p id='browsersavebutton' title='Browser Save (Experimental)' class='navbutton left' onclick={_ => emit('saveInBrowser')}><i class='material-icons'>save</i></p>
         <p id='sharebutton' title='Generate Shareable Link' class='navbutton left' onclick={_ => emit('updateHash')}><i class='material-icons'>share</i></p>
         <p id='nightbutton' title='Night Mode' class='navbutton left' onclick={_ => emit('toggleNightMode')}><i class='material-icons'>invert_colors</i></p>
         <p id='readbutton' title='Reading Mode' class='navbutton left' onclick={_ => emit('toggleReadMode')}><i class='material-icons'>chrome_reader_mode</i></p>

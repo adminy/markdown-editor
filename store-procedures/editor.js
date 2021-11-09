@@ -102,6 +102,28 @@ module.exports = (state, emitter) => {
     }
   })
 
+  emitter.on('saveInBrowser', () => {
+    const text = state.editor.getValue()
+    if (localStorage.getItem('content')) {
+      swal({
+        title: 'Existing Data Detected',
+        text: 'You will overwrite the data previously saved!',
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#DD6B55',
+        confirmButtonText: 'Yes, overwrite!',
+        closeOnConfirm: false
+      }).then(save => {
+        save && localStorage.setItem('content', text)
+        save && swal('Saved', 'Your Document has been saved.', 'success')
+      })
+    } else {
+      localStorage.setItem('content', text)
+      swal('Saved', 'Your Document has been saved.', 'success')
+    }
+    console.log('Saved')
+  })
+
   emitter.on('DOMContentLoaded', () => {
     // Because highlight.js is a bit awkward at times
     const languageOverrides = {
@@ -177,7 +199,7 @@ User: @austinmm
       const old = out.cloneNode(true)
       out.innerHTML = md.render(val)
       emojify.run(out)
-      console.log(out.innerHTML)
+      // console.log(out.innerHTML)
       // Checks if there are any task-list present in out.innerHTML
       out.innerHTML = renderTasklist(out.innerHTML)
 
@@ -194,7 +216,10 @@ User: @austinmm
         }
       }
     }
-    const editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+
+    CodeMirrorSpellChecker({ codeMirrorInstance: CodeMirror })
+
+    const editor = CodeMirror.fromTextArea($('code'), {
       mode: 'spell-checker',
       backdrop: 'gfm',
       lineNumbers: false,
@@ -205,8 +230,6 @@ User: @austinmm
         Enter: 'newlineAndIndentContinueMarkdownList'
       }
     })
-
-    CodeMirrorSpellChecker({ codeMirrorInstance: editor })
 
     editor.on('change', update)
 
@@ -255,8 +278,7 @@ User: @austinmm
           e.preventDefault()
           return false
         }
-        e.shiftKey ? emitter.emit('menu.show') : saveInBrowser()
-
+        emitter.emit(e.shiftKey ? 'menu.show' : 'saveInBrowser')
         e.preventDefault()
         return false
       }
@@ -268,29 +290,6 @@ User: @austinmm
         return false
       }
     })
-
-    function saveInBrowser () {
-      const text = editor.getValue()
-      if (localStorage.getItem('content')) {
-        swal({
-          title: 'Existing Data Detected',
-          text: 'You will overwrite the data previously saved!',
-          type: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#DD6B55',
-          confirmButtonText: 'Yes, overwrite!',
-          closeOnConfirm: false
-        },
-        function () {
-          localStorage.setItem('content', text)
-          swal('Saved', 'Your Document has been saved.', 'success')
-        })
-      } else {
-        localStorage.setItem('content', text)
-        swal('Saved', 'Your Document has been saved.', 'success')
-      }
-      console.log('Saved')
-    }
 
     function processQueryParams () {
       const params = window.location.search.split('?')[1]
