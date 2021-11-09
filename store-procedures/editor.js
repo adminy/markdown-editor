@@ -1,4 +1,5 @@
 const zlib = require('zlib')
+const renderTasklist = require('./utils/task-list')
 const URL = window.URL || window.webkitURL || window.mozURL || window.msURL
 navigator.saveBlob = navigator.saveBlob || navigator.msSaveBlob || navigator.mozSaveBlob || navigator.webkitSaveBlob
 window.saveAs = window.saveAs || window.webkitSaveAs || window.mozSaveAs || window.msSaveAs
@@ -131,8 +132,6 @@ module.exports = (state, emitter) => {
       html: 'xml'
     }
 
-    emojify.setConfig({ img_dir: 'emoji' })
-
     const md = markdownit({
       html: true,
       highlight: function (code, lang) {
@@ -146,50 +145,7 @@ module.exports = (state, emitter) => {
       }
     }).use(footNote)
 
-    function update (e) {
-      setOutput(e.getValue())
-
-      // If a title is added to the document it will be the new document.title, otherwise use default
-      const headerElements = document.querySelectorAll('h1')
-      let title
-      if (headerElements.length > 0 && headerElements[0].textContent.length > 0) {
-        title = headerElements[0].textContent
-      } else {
-        title = 'Markdown Editor'
-      }
-
-      // To avoid to much title changing we check if is not the same as before
-      let oldTitle = document.title
-      if (oldTitle !== title) {
-        oldTitle = title
-        document.title = title
-      }
-    }
-
-    /*
-This function is used to check for task list notation.
-If regex matches the string to task-list markdown format,
-then the task-list is rendered to its correct form.
-User: @austinmm
-*/
-    const renderTasklist = function (str) {
-      // Checked task-list box match
-      if (str.match(/<li>\[x\]\s+\w+/gi)) {
-        str = str.replace(/(<li)(>\[x\]\s+)(\w+)/gi,
-          `$1 style="list-style-type: none;"><input type="checkbox" 
-          checked style="list-style-type: none; 
-          margin: 0 0.2em 0 -1.3em;" disabled> $3`)
-      }
-      // Unchecked task-list box match
-      if (str.match(/<li>\[ \]\s+\w+/gi)) {
-        str = str.replace(/(<li)(>\[ \]\s+)(\w+)/gi,
-          `$1 style="list-style-type: none;"><input type="checkbox" 
-            style="list-style-type: none; 
-            margin: 0 0.2em 0 -1.3em;" disabled> $3`)
-      }
-      return str
-    }
-
+    emojify.setConfig({ mode: 'sprite' })
     function setOutput (val) {
       val = val.replace(/<equation>((.*?\n)*?.*?)<\/equation>/ig, function (a, b) {
         return '<img src="http://latex.codecogs.com/png.latex?' + encodeURIComponent(b) + '" />'
@@ -204,11 +160,8 @@ User: @austinmm
       out.innerHTML = renderTasklist(out.innerHTML)
 
       const allold = old.getElementsByTagName('*')
-      if (allold === undefined) return
-
       const allnew = out.getElementsByTagName('*')
-      if (allnew === undefined) return
-
+      if (!allold || !allnew) return
       for (let i = 0, max = Math.min(allold.length, allnew.length); i < max; i++) {
         if (!allold[i].isEqualNode(allnew[i])) {
           out.scrollTop = allnew[i].offsetTop
@@ -231,7 +184,15 @@ User: @austinmm
       }
     })
 
-    editor.on('change', update)
+    editor.on('change', e => {
+      setOutput(e.getValue())
+      const headerElements = document.querySelectorAll('h1')
+      const header = headerElements?.[0]?.textContent
+      const title = header || 'Markdown Editor'
+      if (document.title !== title) {
+        document.title = title
+      }
+    })
 
     function selectionChanger (selection, operator, endoperator) {
       if (selection === '') {
@@ -326,7 +287,8 @@ User: @austinmm
     } else if (localStorage.getItem('content')) {
       editor.setValue(localStorage.getItem('content'))
     }
-    update(editor)
+    editor.refresh()
+    console.log(editor)
     editor.focus()
     state.editor = editor
   })
