@@ -6,14 +6,16 @@
 
 View GitHub Flavoured Markdown guide [here](https://enterprise.github.com/downloads/en/markdown-cheatsheet.pdf).
 
-## License
 
-This software is released under the ISC License. ISC License is:
+# Editor features
 
->  A permissive license lets people do anything with your code with proper attribution and without warranty. The ISC license is functionally equivalent to the BSD 2-Clause and MIT licenses, removing some language that is no longer necessary. 
+- [tabs](https://github.com/nico-martin/markdown-editor)
+- [click-to-edit, hashtag search](https://github.com/anthonygarvan/marktwo)
+- [reading-time, words counter](https://dillinger.io)
+- [music notes, uml, emoji, comments](https://stackedit.io)
+- [minimalism?](https://github.com/pioul/Minimalist-Online-Markdown-Editor)
+- [simplicity](https://github.com/jbt/markdown-editor)
+- [featureful](https://github.com/pandao/editor.md)
+- [extra-hack-features, live editing](https://github.com/hackmdio/codimd)
 
-Refer to the [LICENSE](https://github.com/jbt/markdown-editor/blob/master/LICENSE) file for the complete text.
-
-
-[enf deflate](https://github.com/dankogai/js-deflate)
 
